@@ -14,13 +14,14 @@ options(warn=-1)
 library(tidyverse)
 library(cowplot)
 library(ISLR)
-```  
+```
 
 # 
 
 ## Data Cleaning
 ```{r}
 df <- read_csv('evals.csv') 
+head(df)
 ```
 
 ## EDA
