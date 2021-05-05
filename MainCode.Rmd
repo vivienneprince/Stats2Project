@@ -16,8 +16,8 @@ library(cowplot)
 library(ISLR)
 ```
 
-# 
-
+# Pretty Privilege {.tabset}  
+ 
 ## Data Cleaning
 ```{r}
 df <- read_csv('evals.csv') 
