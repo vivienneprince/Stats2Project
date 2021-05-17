@@ -1,0 +1,128 @@
+---
+output:
+  html_document:
+    code_folding: show
+    df_print: paged
+    theme: cosmo
+---
+
+<style> 
+  response {color : #F2A130;}
+  img {border: 10px solid #E9EBED; padding: 15px;}
+  .dent {margin-left: 40px;}
+</style>
+
+```{r setup, include=FALSE, warning=FALSE, echo=TRUE}
+knitr::opts_chunk$set(cache = T)
+options(warn=-1)
+library(tidyverse)
+
+datapath <- '/Users/viv/Downloads/DATA'
+```  
+
+```{r}
+hp_df <- read_csv(file.path(datapath,'evals.csv'))
+```
+
+```{r}
+# Dropping columns with redundant information (individual beauty score columns)
+hp_df <- hp_df %>%
+  select(-c(1, 10, 15:20))
+
+df %>%
+  group_by(prof_id, ethnicity, gender, ... etc. all cat vars) %>%
+  summarize(across(everything(), mean))
+```
+
+```{r}
+hp_df %>% 
+  ggplot(aes(rank)) +
+  geom_bar(aes(fill = gender))
+
+```
+
+```{r}
+hp_df %>% 
+  ggplot(aes(rank)) +
+  geom_bar(aes(fill = gender))
+
+range(hp_df$age)
+
+myfactor.age <- function(x) x <- factor(x, levels = c("Twenties", "Thirties", "Forties", "Fifties", "Sixties", "Seventies"))
+
+
+hp_df %>% 
+  mutate(age = case_when(age == 29 ~ "Twenties",
+                         age %in% 30:39 ~ "Thirties",
+                         age %in% 40:49 ~ "Forties",
+                         age %in% 50:59 ~ "Fifties",
+                         age %in% 60:69 ~ "Sixties",
+                         age %in% 70:79 ~ "Seventies")) %>% 
+  mutate_at(vars(`age`), funs(myfactor.age)) %>%
+  ggplot(aes(age)) +
+  geom_bar(aes(fill = rank))
+```
+
+```{r}
+# calculates expected cell count given row, column and grand totals
+exp.count <- function(rtotal, ctotal, ttotal) { return(rtotal * ctotal / ttotal) }
+
+
+my.chisq.test <- function(ctab) {
+  # assuming ctab does not contain totals
+  
+  # initalize useful variables
+  cdim <- dim(ctab)
+  ctab.totals <- addmargins(ctab)
+  o.counts <- ctab
+  e.counts <- ctab
+  
+  # calculate grand total and degrees of freedom
+  N <- ctab.totals[cdim[1] + 1, cdim[2] + 1]
+  df <- prod(cdim-1)
+  
+  # calculate expected counts and store in e.counts table
+  for (i in 1:cdim[1]) {
+    for (j in 1:cdim[2]) {
+      rt <- ctab.totals[i, cdim[2] + 1]
+      ct <- ctab.totals[cdim[1] + 1, j]
+      e.counts[i, j] <- exp.count(rt, ct, N)
+    }
+  }
+  
+  # calculate chi squared
+  chisqr <- addmargins((o.counts - e.counts) ^ 2 / e.counts)[cdim[1] + 1, cdim[2] + 1]
+  pval <- pchisq(chisqr, df, lower.tail = FALSE) 
+  
+  return(c(chisqr, pval))
+}
+```  
+
+
+```{r}
+case.tab <- function(n){
+  casetab <- matrix(c(n*0.51,n*0.49,n*0.49,n*0.51),
+                  ncol = 2,
+                  byrow = TRUE)
+  colnames(casetab) <- c("Yes", "No")
+  rownames(casetab) <- c("Female", "Male")
+  casetab <- as.table(casetab)
+  
+  return(casetab)
+}
+
+caseA <- case.tab(100)
+caseB <- case.tab(200)
+caseC <- case.tab(10000)
+
+my.chisq.test(caseA)
+my.chisq.test(caseB)
+my.chisq.test(caseC)
+
+
+
+# current
+
+```
+
+
