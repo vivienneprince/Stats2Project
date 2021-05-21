@@ -16,6 +16,10 @@ output:
 knitr::opts_chunk$set(cache = T)
 options(warn=-1)
 library(tidyverse)
+library(extrafont)
+# font_import()
+# loadfonts(device = "win")
+# font_families()
 
 datapath <- '/Users/viv/Downloads/DATA'
 ```  
@@ -35,31 +39,136 @@ df_by.professor <- hp_df %>%
   group_by(prof_id, rank, ethnicity, gender, pic_color) %>%
   summarize(across(everything(), mean)) %>%
   ungroup()
-```
 
-```{r}
-df_by.professor %>% 
-  ggplot(aes(rank)) +
-  geom_bar(aes(fill = gender)) +
-  theme_minimal()
-```
-
-```{r}
+#age to category
 myfactor.age <- function(x) x <- factor(x, levels = c("Twenties", "Thirties", "Forties", "Fifties", "Sixties", "Seventies"))
 
-df_by.professor %>% 
+df.cage <- df_by.professor %>% 
   mutate(age = case_when(age == 29 ~ "Twenties",
                          age %in% 30:39 ~ "Thirties",
                          age %in% 40:49 ~ "Forties",
                          age %in% 50:59 ~ "Fifties",
                          age %in% 60:69 ~ "Sixties",
                          age %in% 70:79 ~ "Seventies")) %>% 
-  mutate_at(vars(`age`), funs(myfactor.age)) %>%
-  ggplot(aes(age)) +
-  geom_bar(aes(fill = rank)) +
-  facet_wrap(vars(gender)) +
+  mutate_at(vars(`age`), funs(myfactor.age))
+
+mean(df_by.professor$age)
+mean(df_by.professor$bty_avg)
+mean(df_by.professor$score)
+```
+
+```{r}
+table(df_by.professor$gender)
+table(df_by.professor$ethnicity)
+```
+
+```{r}
+bnwth
+
+df %>%
+  ggplot(aes(x = bty_avg)) +
+  geom_histogram(
+    aes(y = stat(density)),
+    color = "#FDFBFD",
+    fill = "#134f5c",
+    bins = 20,
+    alpha = 0.2
+  ) +
+  stat_function(
+    aes(color = "Normal"),
+    fun = dnorm,
+    args = list(
+      mean = mean(5),
+      sd = sd(df$bty_avg)
+    ),
+    size = 0.6,
+    alpha = 0.7
+  ) +
+  geom_density(adjust = 2.8,
+               size = 0.6,
+               aes(color = "Empirical")) +
+  theme_minimal() + 
+  labs(
+    title = "",
+    x = "",
+    y = ""
+  ) +
+  scale_colour_manual(name = 'Distribution:', values = c('#f39f70', '#434343')) +
+  theme(
+    plot.title = element_text(size = 12),
+    axis.line.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    legend.key = element_blank(),
+    panel.background = element_rect(fill = "transparent"), # bg of the panel
+    plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
+    panel.grid.major.y = element_blank(), # get rid of major grid
+    panel.grid.minor = element_blank(), # get rid of minor grid
+    legend.background = element_rect(fill = "transparent", color = NA), # get rid of legend bg
+    legend.box.background = element_rect(fill = "transparent", color = NA), # get rid of legend panel bg
+    rect = element_rect(fill = "transparent", color = NA), 
+  ) +
+  scale_x_continuous(limits= c(0,10), expand = c(0,0), breaks = 0:10) +
+  scale_y_continuous(expand = c(0,0))
+
+ggsave("bty_dist.png", bg = "transparent", device ="png", width = 8, height = 5)
+```
+
+
+```{r}
+df %>%
+  ggplot(aes(bty_avg, score, color = gender)) +
+  geom_jitter(alpha = 0.5) +
+  scale_color_manual(values = c("#134f5c","#f39f70")) +
+  scale_x_continuous(limits= c(0,10), expand = c(0,0), breaks = 0:10) +
+  scale_y_continuous(limits= c(0,5), expand = c(0,0), breaks = 0:5) +
   
-  theme_minimal()
+  theme_minimal() +
+  theme(panel.background = element_rect(fill = "transparent"), # bg of the panel
+        plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
+        # panel.grid.major = element_blank(), # get rid of major grid
+        # panel.grid.minor = element_blank(), # get rid of minor grid
+        legend.background = element_rect(fill = "transparent", color = NA), # get rid of legend bg
+        legend.box.background = element_rect(fill = "transparent", color = NA), # get rid of legend panel bg
+        rect = element_rect(fill = "transparent", color = NA),
+        axis.text = element_text(colour = "#6d6d6d"),
+        axis.line = element_line(colour = "#6d6d6d"),
+        axis.ticks = element_line(colour = "#6d6d6d")
+  )
+
+ggsave("overview.png",  bg = "transparent", device ="png",
+       width = 10, height = 5)
+  
+```
+
+```{r}
+df.cage %>% 
+  ggplot(aes(rank)) +
+  geom_bar(aes(fill = fct_rev(age)), width = .8) +
+  facet_wrap(vars(gender)) +
+  scale_fill_manual(values = rev(c("#f39e70", "#f5ac83", "#f8c1a2", "#fcdac8","#fde5d8", "#fef0e8"))) +
+  
+  guides(fill = guide_legend(reverse = TRUE)) +
+  labs(x = "",
+       y = "Count",
+       title = "") +
+  scale_y_continuous(limits= c(0,25), expand = c(0,0)) +
+
+  theme_classic() +  
+  theme(panel.background = element_rect(fill = "transparent"), # bg of the panel
+        plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
+        panel.grid.major = element_blank(), # get rid of major grid
+        panel.grid.minor = element_blank(), # get rid of minor grid
+        legend.background = element_rect(fill = "transparent", color = NA), # get rid of legend bg
+        legend.box.background = element_rect(fill = "transparent", color = NA), # get rid of legend panel bg
+        rect = element_rect(fill = "transparent", color = NA),
+        axis.text.x = element_text(colour = "black"),
+        axis.line = element_line(colour = "#6d6d6d"),
+        axis.ticks = element_line(colour = "#6d6d6d")
+  )
+
+ggsave("chisq.png",  bg = "transparent", device ="png",
+       width = 7, height = 5)
 ```
 
 
@@ -67,15 +176,59 @@ df_by.professor %>%
 
 # gender vs tenure
 
+dropping ethnicity vs gender since some counts <5
 ```{r}
-df_by.professor %>% 
-  select(gender, rank)
-
-ctab_rank.gender <- table(df_by.professor$gender, df_by.professor$rank)
+ctab_rank.gender <- table(df_by.professor$rank, df_by.professor$gender)
+ctab_rank.gender
 chisq.test(ctab_rank.gender)
+chisq.test(ctab_rank.gender)$expected
+chisq.test(ctab_rank.gender)$residuals
 
-ctab_rank.ethnicity <- table(df_by.professor$ethnicity, df_by.professor$rank)
-chisq.test(ctab_rank.ethnicity)
+#ctab_rank.ethnicity <- table(df_by.professor$rank, df_by.professor$ethnicity)
+#chisq.test(ctab_rank.ethnicity)
 ```
+
+```{r}
+ggplot(data.frame(x = c(0, 15)), aes(x = x)) +
+  stat_function(fun = dchisq, args = list(df = 2))+
+  scale_x_continuous(limits= c(0,15), expand = c(0,0), breaks = 0:15) +
+  scale_y_continuous(limits= c(0,.52), expand = c(0,0)) +
+  
+  theme_classic()
+```
+
+```{r}
+ggplot(data.frame(x = c(0, 15)), aes(x = x)) +
+  stat_function(fun = dchisq, args = list(df = 2),
+                color = "#434343") +
+  stat_function(fun = dchisq, 
+                args = list(df = 2),
+                xlim = c(4.44 ,15),
+                geom = "area",
+                alpha=0.2,
+                fill = "#a2c4c9") +
+  geom_vline(xintercept = 4.44, col = "#7a9397") +
+  
+  labs(x = "",
+       y = "",
+       title = "") +
+  scale_x_continuous(limits= c(0,15), expand = c(0,0), breaks = 0:15) +
+  scale_y_continuous(limits= c(0,.52), expand = c(0,0)) +
+  
+  theme_classic() +
+  theme(axis.text = element_text(colour = "#6d6d6d"),
+        axis.line = element_line(colour = "#6d6d6d"),
+        panel.background = element_rect(fill = "transparent"), # bg of the panel
+        plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
+        panel.grid.major = element_blank(), # get rid of major grid
+        panel.grid.minor = element_blank(), # get rid of minor grid
+        legend.background = element_rect(fill = "transparent"), # get rid of legend bg
+        legend.box.background = element_rect(fill = "transparent") # get rid of legend panel bg
+  )
+
+ggsave("chisqpval.png",  bg = "transparent", device ="png",
+       width = 7, height = 5)
+```
+
 
 
